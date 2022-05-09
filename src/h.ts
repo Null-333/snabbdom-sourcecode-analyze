@@ -30,7 +30,7 @@ export function addNS(
     }
   }
 }
-
+// h 函数的重载
 export function h(sel: string): VNode;
 export function h(sel: string, data: VNodeData | null): VNode;
 export function h(sel: string, children: VNodeChildren): VNode;
@@ -39,11 +39,14 @@ export function h(
   data: VNodeData | null,
   children: VNodeChildren
 ): VNode;
+
+// 处理参数实现重载机制
 export function h(sel: any, b?: any, c?: any): VNode {
   let data: VNodeData = {};
   let children: any;
   let text: any;
   let i: number;
+  // 处理3个参数的情况
   if (c !== undefined) {
     if (b !== null) {
       data = b;
@@ -52,10 +55,11 @@ export function h(sel: any, b?: any, c?: any): VNode {
       children = c;
     } else if (is.primitive(c)) {
       text = c.toString();
-    } else if (c && c.sel) {
+    } else if (c && c.sel) { // 如果c是vnode
       children = [c];
     }
   } else if (b !== undefined && b !== null) {
+    // 处理两个参数的情况
     if (is.array(b)) {
       children = b;
     } else if (is.primitive(b)) {
@@ -68,6 +72,7 @@ export function h(sel: any, b?: any, c?: any): VNode {
   }
   if (children !== undefined) {
     for (i = 0; i < children.length; ++i) {
+      // 处理children是原始值
       if (is.primitive(children[i]))
         children[i] = vnode(
           undefined,
@@ -86,6 +91,7 @@ export function h(sel: any, b?: any, c?: any): VNode {
   ) {
     addNS(data, children, sel);
   }
+  // 返回vnode
   return vnode(sel, data, children, text, undefined);
 }
 
