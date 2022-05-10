@@ -84,11 +84,15 @@ export type Options = {
   };
 };
 
+// init是一个高阶函数，会返回patch函数。
+// 意图是，如果直接调用patch函数就需要传递4个参数，modules,domApi,oldVnode, vnode
+// patch函数使用率很高，所以函数科里化，先把modules，domApi传入，后面调用patch的时候只需要传oldVnode, vnode
 export function init(
   modules: Array<Partial<Module>>,
   domApi?: DOMAPI,
   options?: Options
 ) {
+  // 生命周期钩子
   const cbs: ModuleHooks = {
     create: [],
     update: [],
@@ -97,13 +101,14 @@ export function init(
     pre: [],
     post: [],
   };
-
+  // vnode是可以跨平台的，这里的domApi默认是浏览器平台
   const api: DOMAPI = domApi !== undefined ? domApi : htmlDomApi;
-
+  // 初始化cbs
   for (const hook of hooks) {
     for (const module of modules) {
       const currentHook = module[hook];
       if (currentHook !== undefined) {
+        // cbs --> { create: [fn1, fn2], update: [fn1, fn2]...}
         (cbs[hook] as any[]).push(currentHook);
       }
     }
@@ -412,7 +417,7 @@ export function init(
     }
     hook?.postpatch?.(oldVnode, vnode);
   }
-
+  // 
   return function patch(
     oldVnode: VNode | Element | DocumentFragment,
     vnode: VNode

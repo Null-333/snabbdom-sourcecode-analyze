@@ -10,9 +10,9 @@ import { Dataset } from "./modules/dataset";
 export type Key = string | number | symbol;
 
 export interface VNode {
-  sel: string | undefined;
+  sel: string | undefined; // 选择器
   data: VNodeData | undefined;
-  children: Array<VNode | string> | undefined;
+  children: Array<VNode | string> | undefined; // children 和 text 是互斥的
   elm: Node | undefined;
   text: string | undefined;
   key: Key | undefined;
