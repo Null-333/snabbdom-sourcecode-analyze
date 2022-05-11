@@ -425,23 +425,28 @@ export function init(
     let i: number, elm: Node, parent: Node;
     const insertedVnodeQueue: VNodeQueue = [];
     for (i = 0; i < cbs.pre.length; ++i) cbs.pre[i]();
-
+    // 判断是否是元素节点
     if (isElement(api, oldVnode)) {
+        // 如果是元素节点，返回一个空的vnode(有sel和elm属性)
       oldVnode = emptyNodeAt(oldVnode);
     } else if (isDocumentFragment(api, oldVnode)) {
       oldVnode = emptyDocumentFragmentAt(oldVnode);
     }
-
+    // 判断vnode是否相同
     if (sameVnode(oldVnode, vnode)) {
+        // vnode相同就patchVnode
       patchVnode(oldVnode, vnode, insertedVnodeQueue);
     } else {
+        // 不相同先获取oldVnode的父节点
       elm = oldVnode.elm!;
       parent = api.parentNode(elm) as Node;
-
+        // 
       createElm(vnode, insertedVnodeQueue);
 
       if (parent !== null) {
+        // 如果有父节点就把vnode插入到父节点
         api.insertBefore(parent, vnode.elm!, api.nextSibling(elm));
+        // 移除oldVnode
         removeVnodes(parent, [oldVnode], 0, 0);
       }
     }
