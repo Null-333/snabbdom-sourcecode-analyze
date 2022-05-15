@@ -92,7 +92,7 @@ export function init(
   domApi?: DOMAPI,
   options?: Options
 ) {
-  // 生命周期钩子
+  // 模块中的生命周期钩子
   const cbs: ModuleHooks = {
     create: [],
     update: [],
@@ -103,7 +103,7 @@ export function init(
   };
   // vnode是可以跨平台的，这里的domApi默认是浏览器平台
   const api: DOMAPI = domApi !== undefined ? domApi : htmlDomApi;
-  // 初始化cbs
+  // 初始化cbs，cbs存放的是modules里的钩子函数
   for (const hook of hooks) {
     for (const module of modules) {
       const currentHook = module[hook];
@@ -148,12 +148,14 @@ export function init(
     let i: any;
     let data = vnode.data;
     if (data !== undefined) {
+        // 触发init钩子
       const init = data.hook?.init;
       if (isDef(init)) {
         init(vnode);
         data = vnode.data;
       }
     }
+
     const children = vnode.children;
     const sel = vnode.sel;
     if (sel === "!") {
@@ -178,8 +180,11 @@ export function init(
       if (hash < dot) elm.setAttribute("id", sel.slice(hash + 1, dot));
       if (dotIdx > 0)
         elm.setAttribute("class", sel.slice(dot + 1).replace(/\./g, " "));
+      // 执行module中的生命周期
       for (i = 0; i < cbs.create.length; ++i) cbs.create[i](emptyNode, vnode);
+
       if (is.array(children)) {
+        // 递归遍历vnode中的children，调用createElement
         for (i = 0; i < children.length; ++i) {
           const ch = children[i];
           if (ch != null) {
@@ -187,9 +192,11 @@ export function init(
           }
         }
       } else if (is.primitive(vnode.text)) {
+        // 生成文本节点
         api.appendChild(elm, api.createTextNode(vnode.text));
       }
       const hook = vnode.data!.hook;
+      // 调用create钩子
       if (isDef(hook)) {
         hook.create?.(emptyNode, vnode);
         if (hook.insert) {
@@ -212,6 +219,7 @@ export function init(
         }
       }
     } else {
+      // 生成文本节点
       vnode.elm = api.createTextNode(vnode.text!);
     }
     return vnode.elm;
@@ -427,7 +435,7 @@ export function init(
     for (i = 0; i < cbs.pre.length; ++i) cbs.pre[i]();
     // 判断是否是元素节点
     if (isElement(api, oldVnode)) {
-        // 如果是元素节点，返回一个空的vnode(有sel和elm属性)
+        // 如果是元素节点，oldVnode返回的是空的vnode(有sel(选择器)和elm(真实dom)属性)
       oldVnode = emptyNodeAt(oldVnode);
     } else if (isDocumentFragment(api, oldVnode)) {
       oldVnode = emptyDocumentFragmentAt(oldVnode);
@@ -440,9 +448,10 @@ export function init(
         // 不相同先获取oldVnode的父节点
       elm = oldVnode.elm!;
       parent = api.parentNode(elm) as Node;
-        // 
+        // 作用是将vnode转为真实dom，再将真实dom存放在vnode的elm属性中(这里并没有挂载elm)
       createElm(vnode, insertedVnodeQueue);
 
+        // 挂载elm
       if (parent !== null) {
         // 如果有父节点就把vnode插入到父节点
         api.insertBefore(parent, vnode.elm!, api.nextSibling(elm));
@@ -450,10 +459,11 @@ export function init(
         removeVnodes(parent, [oldVnode], 0, 0);
       }
     }
-
+    // 触发insert钩子(元素节点插入到DOM树)
     for (i = 0; i < insertedVnodeQueue.length; ++i) {
       insertedVnodeQueue[i].data!.hook!.insert!(insertedVnodeQueue[i]);
     }
+
     for (i = 0; i < cbs.post.length; ++i) cbs.post[i]();
     return vnode;
   };
