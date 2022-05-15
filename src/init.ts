@@ -3,6 +3,8 @@ import { vnode, VNode } from "./vnode";
 import * as is from "./is";
 import { htmlDomApi, DOMAPI } from "./htmldomapi";
 
+// 如果T是U的子类的话，就返回X，否则就返回Y
+// 构造条件类型： T extends U ? X : Y;
 type NonUndefined<T> = T extends undefined ? never : T;
 
 function isUndef(s: any): boolean {
