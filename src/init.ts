@@ -271,10 +271,18 @@ export function init(
       const ch = vnodes[startIdx];
       if (ch != null) {
         if (isDef(ch.sel)) {
+          // 调用 destroy 钩子
           invokeDestroyHook(ch);
-          listeners = cbs.remove.length + 1;
+          // 防止重复删除DOM元素
+          listeners = cbs.remove.length + 1; // 模块中的remove钩子函数个数加一
+          // 返回真正删除DOM元素的函数
           rm = createRmCb(ch.elm!, listeners);
+          // 每次调用模块中的remove钩子都会去减一个listeners(--listeners)
           for (let i = 0; i < cbs.remove.length; ++i) cbs.remove[i](ch, rm);
+          // 模块的remove执行结束以后，再去调用用户的remove钩子
+          // 并且把rm传递给用户，用户可以通过回调来控制或延迟移除
+          // 文档写得：只有当所有 remove 钩子函数执行回调之后元素才会被一次性删除（即：回调必须执行否则元素不会删除）。
+          // https://github.com/snabbdom/snabbdom/blob/master/README-zh_CN.md#remove
           const removeHook = ch?.data?.hook?.remove;
           if (isDef(removeHook)) {
             removeHook(ch, rm);
