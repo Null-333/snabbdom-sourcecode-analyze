@@ -258,7 +258,7 @@ export function init(
       }
     }
   }
-
+  // 删除Vnode，删除真实DOM，并且调用remove钩子函数
   function removeVnodes(
     parentElm: Node,
     vnodes: VNode[],
@@ -394,14 +394,18 @@ export function init(
       removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
     }
   }
-
+  // 具体比较vnode和oldVnode的差异，以及vnode.children和oldVnode.children的差异
+  // https://gitee.com/HelenYin/homework/blob/master/part3/fed-e-task-03-01/images/patchVnode.png
   function patchVnode(
     oldVnode: VNode,
     vnode: VNode,
     insertedVnodeQueue: VNodeQueue
   ) {
+    // 第一个过程： 执行prepatch，update钩子函数
     const hook = vnode.data?.hook;
     hook?.prepatch?.(oldVnode, vnode);
+    // 只有是sameVnode的情况才会调用patchVnode（sel和key是相同的）
+    // saveVnode的情况会重用el，也就是不会修改节点el
     const elm = (vnode.elm = oldVnode.elm)!;
     const oldCh = oldVnode.children as VNode[];
     const ch = vnode.children as VNode[];
@@ -416,6 +420,7 @@ export function init(
         cbs.update[i](oldVnode, vnode);
       vnode.data?.hook?.update?.(oldVnode, vnode);
     }
+    // 第二个过程：对比新旧两个Vnode差异的地方
     if (isUndef(vnode.text)) {
       if (isDef(oldCh) && isDef(ch)) {
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue);
@@ -433,6 +438,7 @@ export function init(
       }
       api.setTextContent(elm, vnode.text!);
     }
+    // 第三个步骤：执行postpatch钩子函数
     hook?.postpatch?.(oldVnode, vnode);
   }
   // 
@@ -455,6 +461,7 @@ export function init(
         // vnode相同就patchVnode
       patchVnode(oldVnode, vnode, insertedVnodeQueue);
     } else {
+        // 不是相同vnode，就先创建新vnode的elm，删除老节点，用新的节点替换老的节点
         // 不相同先获取oldVnode的父节点
       elm = oldVnode.elm!;
       parent = api.parentNode(elm) as Node;
